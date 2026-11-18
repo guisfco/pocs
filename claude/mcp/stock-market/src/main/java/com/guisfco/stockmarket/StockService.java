@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.util.Optional;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,7 +24,6 @@ public class StockService {
                 .build();
     }
 
-    private static final Pattern B3_TICKER = Pattern.compile("^[A-Z]{4}\\d{1,2}$");
     private static final int MAX_SEARCH_RESULTS = 8;
 
     @Tool(description = "Search for a ticker symbol by company, asset or fund name (e.g. 'americanas', 'bitcoin', 'apple'). "
@@ -61,7 +59,7 @@ public class StockService {
             + "Pass the market so the symbol is resolved correctly. Supported markets: B3 (Brazil, e.g. PETR4), "
             + "US (e.g. AAPL), LSE (e.g. VOD), XETRA (e.g. SAP), TSE (e.g. 7203), TSX (e.g. SHOP), "
             + "CRYPTO (e.g. BTC-USD), INDEX (e.g. ^BVSP, ^GSPC), FX (e.g. BRL=X). "
-            + "If the market is omitted, B3-style tickers (PETR4) are treated as B3 and anything else is sent as given.")
+            + "If the market is omitted, the symbol is sent as given (no suffix), so it must already be a full Yahoo symbol such as AMBP3.SA.")
     public String getCurrentPrice(
             @ToolParam(description = "Stock symbol (e.g. PETR4, AAPL, BTC-USD)") String stockSymbol,
             @ToolParam(description = "Market of the symbol: B3, US, LSE, XETRA, TSE, TSX, CRYPTO, INDEX or FX", required = false) String market) {
@@ -73,8 +71,6 @@ public class StockService {
                 return "Unknown market '%s'. Supported markets: %s".formatted(market, Market.supported());
             }
             symbol = parsed.get().toYahooSymbol(symbol);
-        } else if (B3_TICKER.matcher(symbol).matches()) {
-            symbol = Market.B3.toYahooSymbol(symbol);
         }
 
         try {
