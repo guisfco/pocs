@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 public class McpConfig {
 
     @Bean
-    public ToolCallbackProvider accountantTools(CurrencyService currencyService) {
-        return MethodToolCallbackProvider.builder().toolObjects(currencyService).build();
+    public ToolCallbackProvider accountantTools(CurrencyService currencyService, PayrollService payrollService) {
+        return MethodToolCallbackProvider.builder().toolObjects(currencyService, payrollService).build();
     }
 }

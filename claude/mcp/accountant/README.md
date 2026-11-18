@@ -1,6 +1,6 @@
 # accountant
 
-A [Model Context Protocol](https://modelcontextprotocol.io) server (Spring Boot + Spring AI, stdio transport) that exposes currency conversion based on the official Banco Central do Brasil **PTAX** rates.
+A [Model Context Protocol](https://modelcontextprotocol.io) server (Spring Boot + Spring AI, stdio transport) that exposes accounting helpers: currency conversion based on the official Banco Central do Brasil **PTAX** rates, and hourly rate / pay calculations from a base salary.
 
 ## Tools
 
@@ -20,10 +20,39 @@ Supported currencies: `BRL`, `USD`, `EUR`, `GBP`, `JPY`, `CHF`, `CAD`, `AUD`, `D
 Example result:
 
 ```
-100.00 EUR = 110.03 USD (PTAX closing buy rate: 1 EUR = 6.36470 BRL on 2026-11-17; 1 USD = 5.78450 BRL on 2026-11-17)
+100 EUR = 110.030253263 USD (PTAX closing buy rate: 1 EUR = 6.36470 BRL on 2026-11-17; 1 USD = 5.78450 BRL on 2026-11-17)
 ```
 
 If the requested date has no closing bulletin (weekend, holiday, or the market has not closed yet), the previous business day's closing rate is used, looking back up to 5 days. The result always states the date of the rate that was used.
+
+### `calculateHourlyRate`
+
+Hourly rate from a base salary and the hours it covers (`baseSalary / contractedHours`).
+
+| Parameter | Required | Description |
+|---|---|---|
+| `baseSalary` | yes | Base salary for the contracted period |
+| `contractedHours` | no | Hours the salary covers. Defaults to `180` |
+
+Example: `baseSalary=10000` gives `Hourly rate: 55.5555555556 per hour (10000 for 180 hours)`.
+
+### `calculatePay`
+
+How much to receive for the hours actually worked, proportional to the base salary. No overtime or bonus rules are applied.
+
+| Parameter | Required | Description |
+|---|---|---|
+| `hoursWorked` | yes | Hours actually worked in the period |
+| `baseSalary` | yes | Base salary for the contracted period |
+| `contractedHours` | no | Hours the salary covers. Defaults to `180` |
+
+Example: `hoursWorked=150`, `baseSalary=10000` gives `Pay for 150 hours: 8333.3333333333 (hourly rate 55.5555555556, base salary 10000 for 180 hours)`.
+
+Amounts are in whatever currency the salary is given in. To see the pay in another currency, pass the result to `convertCurrency`.
+
+## Precision
+
+None of the tools round their results. Multiplications are exact. Divisions that don't end (for example `10000 / 176`) are carried to 10 decimal places, with the last digit rounded half-up, and trailing zeros are removed.
 
 ## Requirements
 
